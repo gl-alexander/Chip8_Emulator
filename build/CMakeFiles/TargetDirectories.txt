@@ -1,3 +1,0 @@
-/home/alek/basic-c-sdl-project/build/CMakeFiles/basic-c-sdl-project.dir
-/home/alek/basic-c-sdl-project/build/CMakeFiles/edit_cache.dir
-/home/alek/basic-c-sdl-project/build/CMakeFiles/rebuild_cache.dir
