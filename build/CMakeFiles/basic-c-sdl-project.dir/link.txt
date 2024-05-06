@@ -1,0 +1,1 @@
+/usr/bin/cc "CMakeFiles/basic-c-sdl-project.dir/src/main.c.o" -o basic-c-sdl-project  /usr/lib/x86_64-linux-gnu/libSDL2main.a /usr/lib/x86_64-linux-gnu/libSDL2.so 
