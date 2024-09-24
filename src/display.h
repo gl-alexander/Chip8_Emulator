@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <SDL.h>
 #include "utils.h"
 
@@ -16,8 +15,6 @@
 #define COL_ORANGE 255, 170, 0
 #define COL_BACKGROUND COL_WHITE
 #define COL_PIXEL COL_ORANGE
-
-
 
 // display state:
 typedef struct display {

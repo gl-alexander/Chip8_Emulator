@@ -1,14 +1,14 @@
 #include <stdint.h>
 #include "utils.h"
+#include "display.h"
+#include "input.h"
 
 // constants
 #define MEMSIZE 4096 
 #define REGCOUNT 16
 #define STACKSIZE 16
-#define KEYPAD_SIZE 16
 
 // cpu state:
-
 struct chip8_cpu {
 	uint16_t current_op_code;
 	uint8_t memory[MEMSIZE];
@@ -26,16 +26,18 @@ struct chip8_cpu {
 	uint16_t s_pointer;
 
 	// keypress keypad abstraction
-	uint8_t key[KEYPAD_SIZE];
+	uint8_t keypad[KEYBOARD_SIZE];
+
+	// any new graphics to render?
+	uint8_t drawFlag;
+	display display;
 };
 
 typedef struct chip8_cpu chip8_cpu;
 
 
 void initialize(chip8_cpu* cpu);
-void load_game(const char* gamepath);
-
-void emulate_cycle(chip8_cpu* cpu);
+void load_game(const char* gamepath); void emulate_cycle(chip8_cpu* cpu);
 void store_keys(chip8_cpu* cpu);
 
 

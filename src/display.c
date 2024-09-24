@@ -50,25 +50,12 @@ int initDisplay(display* gfx)
             printf("Renderer could not be created!\n"
                    "SDL_Error: %s\n", SDL_GetError());
         }
-        else 
-		{
-			render(gfx);
-		}
-        
-
-        // Destroy window
-        SDL_DestroyWindow(gfx->window);
     }
-
-    // Quit SDL
-    SDL_Quit();
-
     return 0;
 }
 
 
 void render(display* gfx) {
-
 	u8 sampleScreen[HEIGHT][WIDTH] = {0};
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
@@ -80,49 +67,29 @@ void render(display* gfx) {
 			}
 		}
 	}
-	// Event loop exit flag
-	bool quit = false;
 	int iter = 0;
-	// Event loop
-	while(!quit)
+
+	// Initialize renderer color white for the background
+	SDL_SetRenderDrawColor(gfx->renderer, COL_BACKGROUND, 0xFF);
+
+	// Clear screen
+	SDL_RenderClear(gfx->renderer);
+
+	// // Set renderer color red to draw the square
+	// SDL_SetRenderDrawColor(gfx->renderer, 0xFF, 0x00, 0x00, 0xFF);
+
+	// // Draw filled square
+	// SDL_RenderFillRect(gfx->renderer, &squareRect);
+
+	renderGraphics(gfx, sampleScreen);
+	// Update screen
+	SDL_RenderPresent(gfx->renderer);
+	iter++;
+	if (iter >= 32)
 	{
-		SDL_Event e;
-
-		// doesn't wait for the next available event
-		SDL_PollEvent(&e);
-
-		// User requests quit
-		if(e.type == SDL_QUIT)
-		{
-			quit = true;
-		}
-		
-		
-
-		// Initialize renderer color white for the background
-		SDL_SetRenderDrawColor(gfx->renderer, COL_BACKGROUND, 0xFF);
-
-		// Clear screen
-		SDL_RenderClear(gfx->renderer);
-
-		// // Set renderer color red to draw the square
-		// SDL_SetRenderDrawColor(gfx->renderer, 0xFF, 0x00, 0x00, 0xFF);
-
-		// // Draw filled square
-		// SDL_RenderFillRect(gfx->renderer, &squareRect);
-
-		renderGraphics(gfx, sampleScreen);
-
-		renderPixel(gfx, iter, iter, 1);
-		// Update screen
-		SDL_RenderPresent(gfx->renderer);
-		iter++;
-		if (iter >= 32) {
-			iter = 0;
-		}
+		iter = 0;
 	}
-		// Destroy renderer
-		SDL_DestroyRenderer(gfx->renderer);
+	// Destroy renderer
 }	
 
 void renderGraphics(display* gfx, u8 screen[HEIGHT][WIDTH]) {
