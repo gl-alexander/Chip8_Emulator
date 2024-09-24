@@ -9,6 +9,7 @@
 #define MEMSIZE 4096 
 #define REGCOUNT 16
 #define STACKSIZE 16
+#define FONTSET_SIZE 80
 
 // cpu state:
 struct chip8_cpu {
@@ -36,7 +37,6 @@ struct chip8_cpu {
 };
 
 typedef struct chip8_cpu chip8_cpu;
-
 
 void initialize(chip8_cpu* cpu);
 void load_game(const char* gamepath); void emulate_cycle(chip8_cpu* cpu);

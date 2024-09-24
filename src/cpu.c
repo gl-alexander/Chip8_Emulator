@@ -1,13 +1,12 @@
 #include "cpu.h"
 
 const u32 START_ADDRESS = 0x200;
-const u32 FONTSET_SIZE = 16 * 5;
 const u32 FONTSET_START_ADDRESS = 0x50;
 
 const u32 CARRY_BIT = 15;
 
 // Sprite representation of the fontset
-uint8_t fontset[FONTSET_SIZE] =
+static uint8_t fontset[FONTSET_SIZE] =
 {
 	0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
 	0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -46,13 +45,16 @@ void initialize(chip8_cpu* cpu) {
 
 void emulate_cycle(chip8_cpu* cpu) {
     // Fetch operation
-    cpu->current_op_code = ((cpu->memory[pc] << 8) | cpu->memory[pc + 1]);
+    cpu->current_op_code = 
+    ((cpu->memory[cpu->program_counter] << 8) | cpu->memory[cpu->program_counter + 1]);
 
 }
 
 void handle_op(chip8_cpu* cpu) {
     u16 opcode = cpu->current_op_code;
-    
+    if (opcode > 0x1000) {
+        OP_1NNN(cpu);
+    }
 }
 
 u16 getVX(u16 opcode) {
@@ -135,14 +137,14 @@ void OP_8XY6(chip8_cpu* cpu) {
     u16 VY = getVY(cpu->current_op_code);
 
     cpu->registers[CARRY_BIT] = (cpu->registers[VY] & 1);
-    cpu->registers[VX] = (cpu->registers[VY] >> 1)
+    cpu->registers[VX] = (cpu->registers[VY] >> 1);
 }
 void OP_8XYE(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
     u16 VY = getVY(cpu->current_op_code);
 
     cpu->registers[CARRY_BIT] = ((cpu->registers[VY] & 128) >> 7);
-    cpu->registers[VX] = (cpu->registers[VY] << 1)
+    cpu->registers[VX] = (cpu->registers[VY] << 1);
 }
 void OP_CXNN(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
