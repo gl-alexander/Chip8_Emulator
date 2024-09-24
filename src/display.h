@@ -25,7 +25,6 @@ typedef struct display {
 
 int initSDL(void);
 int initDisplay(display *gfx);
-void loop();
 void render(display *gfx);
 void renderGraphics(display* gfx, u8 screen[HEIGHT][WIDTH]);
 void renderPixel(display * gfx, u8 x, u8 y, u8 value);
