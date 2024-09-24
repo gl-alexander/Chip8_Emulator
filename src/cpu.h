@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "utils.h"
 
 // constants
 #define MEMSIZE 4096 
@@ -31,8 +32,11 @@ struct chip8_cpu {
 typedef struct chip8_cpu chip8_cpu;
 
 
-void initialize(chip8_cpu const * cpu);
+void initialize(chip8_cpu* cpu);
 void load_game(const char* gamepath);
+
 void emulate_cycle(chip8_cpu* cpu);
 void store_keys(chip8_cpu* cpu);
+
+
 
