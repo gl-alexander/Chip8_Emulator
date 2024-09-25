@@ -18,7 +18,7 @@
 
 // display state:
 typedef struct display {
-	u8 screen[WIDTH * HEIGHT];
+	u8 screen[HEIGHT][WIDTH];
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 } display;

@@ -10,6 +10,7 @@
 #define REGCOUNT 16
 #define STACKSIZE 16
 #define FONTSET_SIZE 80
+#define SPRITE_WIDTH 8
 
 // cpu state:
 struct chip8_cpu {
@@ -24,7 +25,7 @@ struct chip8_cpu {
 	uint16_t I_address_register;		//needs to be 12 bits wide	
 	uint8_t delay_timer;
 	uint8_t sound_timer;				//buzzes when reaching 0
-										//
+
 	uint16_t stack[STACKSIZE];
 	uint16_t s_pointer;
 

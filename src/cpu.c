@@ -169,7 +169,7 @@ void OP_2NNN(chip8_cpu* cpu) {
         exit(1);
     }
     // Remember address of next instruction: 
-    cpu->stack[cpu->s_pointer] = cpu->program_counter + 1;
+    cpu->stack[cpu->s_pointer] = cpu->program_counter + 2;
     cpu->s_pointer++;
     // Set subroutine address start as current operation
     cpu->program_counter = ( cpu->current_op_code & 0xFFF); 
@@ -183,3 +183,154 @@ void OP_00EE(chip8_cpu* cpu) {
     cpu->s_pointer--;
     cpu->program_counter = cpu->stack[cpu->s_pointer];
 }
+void OP_3XNN(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    u8 num = cpu->current_op_code & 0x00ff;
+    if (cpu->registers[VX] == num) {
+        cpu->program_counter += 2; // skip following instruction
+    }
+}
+void OP_5XY0(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    u16 VY = getVY(cpu->current_op_code);
+    if (cpu->registers[VX] == cpu->registers[VY]) {
+        cpu->program_counter += 2; 
+    }
+}
+void OP_4XNN(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    u8 num = cpu->current_op_code & 0x00ff;
+    if (cpu->registers[VX] != num) {
+        cpu->program_counter += 2; 
+    }
+}
+void OP_9XY0(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    u16 VY = getVY(cpu->current_op_code);
+    if (cpu->registers[VX] != cpu->registers[VY]) {
+        cpu->program_counter += 2; 
+    }
+}
+void OP_FX15(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    cpu->delay_timer = cpu->registers[VX];
+}
+void OP_FX07(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    cpu->registers[VX] = cpu->delay_timer;
+}
+void OP_FX18(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    cpu->sound_timer = cpu->registers[VX];
+}
+void OP_FX0A(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    bool found = false;
+    for (u8 i = 0; i < KEYBOARD_SIZE; i++) {
+        if (cpu->keypad[i]) {
+            cpu->registers[VX] = i;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        cpu->program_counter -= 2; // effectively executes a while loop
+    }
+} 
+void OP_EX9E(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    u8 value = cpu->registers[VX];
+    if (value > KEYBOARD_SIZE) {
+        printf("No such key...\n");
+        exit(1);
+    }
+    if (cpu->keypad[value]) {
+        cpu->program_counter += 2;
+    }
+}
+void OP_EXA1(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    u8 value = cpu->registers[VX];
+    if (value > KEYBOARD_SIZE) {
+        printf("No such key...\n");
+        exit(1);
+    }
+    if (cpu->keypad[value] == 0) {
+        cpu->program_counter += 2;
+    }
+}
+void OP_ANNN(chip8_cpu* cpu) {
+    u8 num = cpu->current_op_code & 0x0fff;
+    cpu->I_address_register = num;
+}
+void OP_FX1E(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    cpu->I_address_register += cpu->registers[VX];
+}
+void drawSpriteRow(chip8_cpu* cpu, u8 x, u8 y, u8 data) {
+    for (int i = 0; i < SPRITE_WIDTH; i++) {
+        u8 color = ((data & (1 << i)) >> i);
+        if (color == 1 && cpu->display.screen[y][x + SCREEN_WIDTH - i - 1] == 1) {
+            cpu->registers[CARRY_BIT] = 1;
+        }
+        // This draw function draws the width of the passed row of bits, row stays the same
+        // Note that the drawing is done by XOR-ing the current screen
+        cpu->display.screen[y][x + SCREEN_WIDTH - i - 1] ^= color;
+    }
+}
+void OP_DXYN(chip8_cpu* cpu) {
+    // Draw sprite at reg[X] reg[Y] on the screen with N bytes of sprite data
+    // Starting at the address I in memory
+    // Drawing from top to bottom
+    u16 VX = getVX(cpu->current_op_code);
+    u16 VY = getVY(cpu->current_op_code);
+    u8 num = cpu->current_op_code & 0x000f;
+    u16 x, y;
+    x = cpu->registers[VX];
+    y = cpu->registers[VY];
+    if (x >= WIDTH - SPRITE_WIDTH || y >= HEIGHT - num) {
+        printf("Draw call outside of screen range. X = %d, Y = %d...\n", x, y);
+        exit(1);
+    }
+    for (int i = 0; i < num; i++) {
+        u8 data = cpu->memory[cpu->I_address_register + i];
+        drawSpriteRow(cpu, x, y + i, data); // row changes for each byte of sprite data
+    }
+    cpu->drawFlag = 1;
+}
+
+void OP_00E0(chip8_cpu* cpu) {
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            cpu->display.screen[y][x] = 0;
+        }
+    }
+    cpu->drawFlag = 1;
+}
+void OP_FX29(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    cpu->I_address_register = FONTSET_START_ADDRESS + cpu->registers[VX] * 5;
+}
+void OP_FX33(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    u8 value = cpu->registers[VX];
+    cpu->memory[cpu->I_address_register + 2] = value % 10;
+    value /= 10;
+    cpu->memory[cpu->I_address_register + 1] = value % 10;
+    value /= 10;
+    cpu->memory[cpu->I_address_register] = value % 10;
+}
+void OP_FX55(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    for (int i = 0; i < VX; i++) {
+        cpu->memory[cpu->I_address_register + i] = cpu->registers[i];
+    }
+    cpu->I_address_register += VX + 1;
+} 
+void OP_FX65(chip8_cpu* cpu) {
+    u16 VX = getVX(cpu->current_op_code);
+    for (int i = 0; i < VX; i++) {
+        cpu->registers[i] = cpu->memory[cpu->I_address_register + i];
+    }
+    cpu->I_address_register += VX + 1;
+} 
