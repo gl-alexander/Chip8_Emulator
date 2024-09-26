@@ -135,10 +135,10 @@ void handle_op(chip8_cpu* cpu) {
 }
 
 u16 getVX(u16 opcode) {
-    return ((opcode & 0x0f00) >> 16);
+    return ((opcode & 0x0f00) >> 8);
 }
 u16 getVY(u16 opcode) {
-    return ((opcode & 0x00f0) >> 8);
+    return ((opcode & 0x00f0) >> 4);
 }
 
 void OP_6XNN(chip8_cpu* cpu) {
@@ -344,32 +344,39 @@ void OP_FX1E(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
     cpu->I_address_register += cpu->registers[VX];
 }
+
 void drawSpriteRow(chip8_cpu* cpu, u8 x, u8 y, u8 data) {
     for (int i = 0; i < SPRITE_WIDTH; i++) {
-        u8 color = ((data & (1 << i)) >> i);
-        if (color == 1 && cpu->display.screen[y][x + SCREEN_WIDTH - i - 1] == 1) {
-            cpu->registers[CARRY_BIT] = 1;
+        u8 pixel = data & (0x80 >> i);
+        if (pixel == 1) {
+            if (cpu->display.screen[y][x + i] == 1) {
+                cpu->registers[CARRY_BIT] = 1;
+            }
+            // This draw function draws the width of the passed row of bits, row stays the same
+            // Note that the drawing is done by XOR-ing the current screen
+            cpu->display.screen[y][x + i] ^= pixel;
         }
-        // This draw function draws the width of the passed row of bits, row stays the same
-        // Note that the drawing is done by XOR-ing the current screen
-        cpu->display.screen[y][x + SCREEN_WIDTH - i - 1] ^= color;
     }
 }
+
 void OP_DXYN(chip8_cpu* cpu) {
     // Draw sprite at reg[X] reg[Y] on the screen with N bytes of sprite data
     // Starting at the address I in memory
     // Drawing from top to bottom
     u16 VX = getVX(cpu->current_op_code);
     u16 VY = getVY(cpu->current_op_code);
-    u8 num = cpu->current_op_code & 0x000f;
+    u8 height = cpu->current_op_code & 0x000f;
+
     u16 x, y;
-    x = cpu->registers[VX];
-    y = cpu->registers[VY];
-    if (x >= WIDTH - SPRITE_WIDTH || y >= HEIGHT - num) {
+    x = cpu->registers[VX] % WIDTH;
+    y = cpu->registers[VY] % HEIGHT;
+    cpu->registers[CARRY_BIT] = 0;
+
+    if (x >= WIDTH - SPRITE_WIDTH || y >= HEIGHT - height) {
         printf("Draw call outside of screen range. X = %d, Y = %d...\n", x, y);
         exit(1);
     }
-    for (int i = 0; i < num; i++) {
+    for (int i = 0; i < height; i++) {
         u8 data = cpu->memory[cpu->I_address_register + i];
         drawSpriteRow(cpu, x, y + i, data); // row changes for each byte of sprite data
     }

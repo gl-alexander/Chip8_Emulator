@@ -56,40 +56,15 @@ int initDisplay(display* gfx)
 
 
 void render(display* gfx) {
-	u8 sampleScreen[HEIGHT][WIDTH] = {0};
-	for (int i = 0; i < HEIGHT; i++) {
-		for (int j = 0; j < WIDTH; j++) {
-			if (i % 2 == 0) {
-				sampleScreen[i][j] = (j % 2 == 0) ? 1 : 0;
-			}
-			else {
-				sampleScreen[i][j] = (j % 2 == 1) ? 1 : 0;
-			}
-		}
-	}
-	int iter = 0;
-
 	// Initialize renderer color white for the background
 	SDL_SetRenderDrawColor(gfx->renderer, COL_BACKGROUND, 0xFF);
 
 	// Clear screen
 	SDL_RenderClear(gfx->renderer);
 
-	// // Set renderer color red to draw the square
-	// SDL_SetRenderDrawColor(gfx->renderer, 0xFF, 0x00, 0x00, 0xFF);
-
-	// // Draw filled square
-	// SDL_RenderFillRect(gfx->renderer, &squareRect);
-
-	renderGraphics(gfx, sampleScreen);
+	renderGraphics(gfx, gfx->screen);
 	// Update screen
 	SDL_RenderPresent(gfx->renderer);
-	iter++;
-	if (iter >= 32)
-	{
-		iter = 0;
-	}
-	// Destroy renderer
 }	
 
 void renderGraphics(display* gfx, u8 screen[HEIGHT][WIDTH]) {
@@ -113,5 +88,4 @@ void renderPixel(display * gfx, u8 x, u8 y, u8 value) {
 	SDL_Rect curr = {x * PIXEL_WIDTH, y * PIXEL_HEIGHT, PIXEL_WIDTH, PIXEL_HEIGHT};
 
 	SDL_RenderFillRect(gfx->renderer, &curr);
-
 }
