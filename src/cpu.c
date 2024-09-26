@@ -1,4 +1,7 @@
 #include "cpu.h"
+#include "stdio.h"
+#include "fcntl.h"
+#include "unistd.h"
 
 const u32 START_ADDRESS = 0x200;
 const u32 FONTSET_START_ADDRESS = 0x50;
@@ -43,17 +46,91 @@ void initialize(chip8_cpu* cpu) {
     srand(time(NULL));
 }
 
+void load_game(chip8_cpu* cpu, const char* gamepath) {
+    char buffer[0x1000];
+    int fd = open(gamepath, O_RDONLY);
+    if (fd < 0) {
+        printf("Could not find file %s\n", gamepath);
+        exit(1);
+    }
+    int n = read(fd, buffer, sizeof(buffer));
+    for (int i = 0; i < n; i++) {
+        cpu->memory[START_ADDRESS + i] = buffer[i];
+    }
+}
+
 void emulate_cycle(chip8_cpu* cpu) {
     // Fetch operation
-    cpu->current_op_code = 
-    ((cpu->memory[cpu->program_counter] << 8) | cpu->memory[cpu->program_counter + 1]);
-
+    u16 pc = cpu->program_counter;
+    cpu->current_op_code = ((cpu->memory[pc] << 8) | cpu->memory[pc + 1]);
+    cpu->program_counter += 2;
+    handle_op(cpu);
 }
 
 void handle_op(chip8_cpu* cpu) {
     u16 opcode = cpu->current_op_code;
-    if (opcode > 0x1000) {
-        OP_1NNN(cpu);
+    u16 b1, b2, b3, b4;
+    b1 = (opcode & 0xf000) >> 12u;
+    b2 = (opcode & 0x0f00); 
+    b3 = (opcode & 0x00f0); 
+    b4 = (opcode & 0x000f); 
+
+    switch (b1) {
+        case 0x1: OP_1NNN(cpu); break;
+        case 0x2: OP_2NNN(cpu); break;
+        case 0x3: OP_3XNN(cpu); break;
+        case 0x4: OP_4XNN(cpu); break;
+        case 0x5: OP_5XY0(cpu); break;
+        case 0x6: OP_6XNN(cpu); break;
+        case 0x7: OP_7XNN(cpu); break;
+        case 0x9: OP_9XY0(cpu); break;
+        case 0xA: OP_ANNN(cpu); break;
+        case 0xB: OP_BNNN(cpu); break;
+        case 0xC: OP_CXNN(cpu); break;
+        case 0xD: OP_DXYN(cpu); break;
+        case 0x8: {
+            switch (b4) {
+                case 0x0: OP_8XY0(cpu); break;
+                case 0x1: OP_8XY1(cpu); break;
+                case 0x2: OP_8XY2(cpu); break;
+                case 0x3: OP_8XY3(cpu); break;
+                case 0x4: OP_8XY4(cpu); break;
+                case 0x5: OP_8XY5(cpu); break;
+                case 0x6: OP_8XY6(cpu); break;
+                case 0x7: OP_8XY7(cpu); break;
+                case 0xE: OP_8XYE(cpu); break;
+            }
+            break;
+        }
+        case 0x0: {
+            if (b3 != 0 || b2 != 0x00e0) break;
+            switch (b4) {
+                case 0x0: OP_00E0(cpu); break;
+                case 0xE: OP_00EE(cpu); break;
+            }
+            break;
+        }
+        case 0xE: {
+            switch (b3 + b4) {
+                case 0xA1: OP_EXA1(cpu); break;
+                case 0x9E: OP_EX9E(cpu); break;
+            }
+            break;
+        }
+        case 0xF: {
+            switch (b3 + b4) {
+                case 0x07: OP_FX07(cpu); break;
+                case 0x0A: OP_FX0A(cpu); break;
+                case 0x15: OP_FX15(cpu); break;
+                case 0x18: OP_FX18(cpu); break;
+                case 0x1E: OP_FX1E(cpu); break;
+                case 0x29: OP_FX29(cpu); break;
+                case 0x33: OP_FX33(cpu); break;
+                case 0x55: OP_FX55(cpu); break;
+                case 0x65: OP_FX65(cpu); break;
+            }
+        }
+
     }
 }
 

@@ -40,7 +40,7 @@ struct chip8_cpu {
 typedef struct chip8_cpu chip8_cpu;
 
 void initialize(chip8_cpu* cpu);
-void load_game(const char* gamepath); void emulate_cycle(chip8_cpu* cpu);
+void load_game(chip8_cpu* cpu, const char* gamepath);
 void emulate_cycle(chip8_cpu* cpu);
 void handle_op(chip8_cpu* cpu);
 
@@ -68,4 +68,26 @@ void OP_BNNN(chip8_cpu* cpu);
 // Subroutines
 void OP_2NNN(chip8_cpu* cpu);
 void OP_00EE(chip8_cpu* cpu);
-
+// Skip instruction
+void OP_3XNN(chip8_cpu* cpu);
+void OP_5XY0(chip8_cpu* cpu);
+void OP_4XNN(chip8_cpu* cpu);
+void OP_9XY0(chip8_cpu* cpu);
+// Timers
+void OP_FX15(chip8_cpu* cpu);
+void OP_FX07(chip8_cpu* cpu);
+void OP_FX18(chip8_cpu* cpu);
+// Keypad
+void OP_FX0A(chip8_cpu* cpu);
+void OP_EX9E(chip8_cpu* cpu);
+void OP_EXA1(chip8_cpu* cpu);
+// Graphics
+void OP_ANNN(chip8_cpu* cpu);
+void OP_FX1E(chip8_cpu* cpu);
+void OP_DXYN(chip8_cpu* cpu);
+void OP_00E0(chip8_cpu* cpu);
+void OP_FX29(chip8_cpu* cpu);
+void OP_FX33(chip8_cpu* cpu);
+// Register values
+void OP_FX55(chip8_cpu* cpu);
+void OP_FX65(chip8_cpu* cpu);
