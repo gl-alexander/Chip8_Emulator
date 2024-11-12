@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     // Engine refresh rate
     float cycleDelay = (1.0F / REFRESH_RATE);
 
-	initDisplay(&chip8.display);
+    initDisplay(&chip8.display);
     initInput(chip8.keypad);
     initialize(&chip8);
     // Loads the passed ROM to the Chip8 Memory
@@ -42,11 +42,5 @@ int main(int argc, char* argv[]) {
     SDL_DestroyWindow(chip8.display.window);
 	SDL_DestroyRenderer(chip8.display.renderer);
     SDL_Quit();
-    // for (int y = 0; y < HEIGHT; y++) {
-    //     for (int x = 0; x < WIDTH; x++) {
-    //         printf("%d ", chip8.display.screen[y][x]);
-    //     }
-    //     printf("\n");
-    // }
     return 0;
 }

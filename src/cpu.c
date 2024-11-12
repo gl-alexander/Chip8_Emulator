@@ -74,7 +74,6 @@ void handle_op(chip8_cpu* cpu) {
     b2 = (opcode & 0x0f00); 
     b3 = (opcode & 0x00f0); 
     b4 = (opcode & 0x000f); 
-    printf("Opcode: %x\n",opcode);
 
     switch (b1) {
         case 0x1: OP_1NNN(cpu); break;
@@ -104,7 +103,7 @@ void handle_op(chip8_cpu* cpu) {
             break;
         }
         case 0x0: {
-            if (b3 != 0 || b2 != 0x00e0) break;
+            if (b2 != 0 || b3 != 0x00e0) break;
             switch (b4) {
                 case 0x0: OP_00E0(cpu); break;
                 case 0xE: OP_00EE(cpu); break;
@@ -211,7 +210,6 @@ void OP_8XY3(chip8_cpu* cpu) {
     cpu->registers[VX] ^= cpu->registers[VY];
 }
 void OP_8XY6(chip8_cpu* cpu) {
-    printf("Shifting at 8XY6\n");
     u16 VX = getVX(cpu->current_op_code);
     u16 VY = getVY(cpu->current_op_code);
 
@@ -219,7 +217,6 @@ void OP_8XY6(chip8_cpu* cpu) {
     cpu->registers[VX] = (cpu->registers[VY] >> 1);
 }
 void OP_8XYE(chip8_cpu* cpu) {
-    printf("Shifting at 8XYE\n");
     u16 VX = getVX(cpu->current_op_code);
     u16 VY = getVY(cpu->current_op_code);
 
@@ -374,7 +371,6 @@ void OP_DXYN(chip8_cpu* cpu) {
     x = cpu->registers[VX] % WIDTH;
     y = cpu->registers[VY] % HEIGHT;
     cpu->registers[CARRY_BIT] = 0;
-    //printf("Drawing at x=%d y=%d\tLocation: %d\n", x, y, cpu->I_address_register);
 
     if (y >= HEIGHT - height) {
         printf("Draw call outside of screen range. X = %d, Y = %d...\n", x, y);
