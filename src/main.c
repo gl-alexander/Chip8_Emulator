@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include "cpu.h"
 
-#define DELAY 3
-#define REFRESH_RATE 500
+#define REFRESH_RATE 100
 
 int main(int argc, char* argv[]) {
     (void) argc;
@@ -11,31 +10,29 @@ int main(int argc, char* argv[]) {
     char romPath[] = "../games/test_opcode.ch8";
 
     chip8_cpu chip8;
+    // Engine refresh rate
     float cycleDelay = (1.0F / REFRESH_RATE);
 
-    // TODO remove render() call in init
 	initDisplay(&chip8.display);
-
-    //set up input
     initInput(chip8.keypad);
-
     initialize(&chip8);
+    // Loads the passed ROM to the Chip8 Memory
     load_game(&chip8, romPath);
 
     clock_t lastCycleTime = clock();
     bool quit = false;
-
     while (!quit) {
         handleInput(chip8.keypad, &quit);
 
         clock_t currentTime = clock();
-        float dt = (float)(currentTime - lastCycleTime) * 1000.0f / CLOCKS_PER_SEC; 
+        float dt = (float)(currentTime - lastCycleTime) / CLOCKS_PER_SEC; 
 
         if (dt > cycleDelay) {
             lastCycleTime = currentTime;
             emulate_cycle(&chip8);
             if (chip8.drawFlag) {
                 render(&chip8.display);
+                chip8.drawFlag = 0;
             }
         }
 
@@ -45,6 +42,11 @@ int main(int argc, char* argv[]) {
     SDL_DestroyWindow(chip8.display.window);
 	SDL_DestroyRenderer(chip8.display.renderer);
     SDL_Quit();
-
+    // for (int y = 0; y < HEIGHT; y++) {
+    //     for (int x = 0; x < WIDTH; x++) {
+    //         printf("%d ", chip8.display.screen[y][x]);
+    //     }
+    //     printf("\n");
+    // }
     return 0;
 }

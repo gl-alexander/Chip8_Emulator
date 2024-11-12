@@ -74,6 +74,7 @@ void handle_op(chip8_cpu* cpu) {
     b2 = (opcode & 0x0f00); 
     b3 = (opcode & 0x00f0); 
     b4 = (opcode & 0x000f); 
+    printf("Opcode: %x\n",opcode);
 
     switch (b1) {
         case 0x1: OP_1NNN(cpu); break;
@@ -155,7 +156,7 @@ void OP_8XY0(chip8_cpu* cpu) {
 void OP_7XNN(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
     u8 num = cpu->current_op_code & 0x00ff;
-    cpu->registers[VX] = (cpu->registers[VX] + num) % 255;
+    cpu->registers[VX] = (cpu->registers[VX] + num) % 256;
 }
 void OP_8XY4(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
@@ -167,7 +168,7 @@ void OP_8XY4(chip8_cpu* cpu) {
     else {
         cpu->registers[CARRY_BIT] = 0;
     }
-    cpu->registers[VX] = (result % 0xff);
+    cpu->registers[VX] = (result & 0xff);
 }
 void OP_8XY5(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
@@ -210,6 +211,7 @@ void OP_8XY3(chip8_cpu* cpu) {
     cpu->registers[VX] ^= cpu->registers[VY];
 }
 void OP_8XY6(chip8_cpu* cpu) {
+    printf("Shifting at 8XY6\n");
     u16 VX = getVX(cpu->current_op_code);
     u16 VY = getVY(cpu->current_op_code);
 
@@ -217,6 +219,7 @@ void OP_8XY6(chip8_cpu* cpu) {
     cpu->registers[VX] = (cpu->registers[VY] >> 1);
 }
 void OP_8XYE(chip8_cpu* cpu) {
+    printf("Shifting at 8XYE\n");
     u16 VX = getVX(cpu->current_op_code);
     u16 VY = getVY(cpu->current_op_code);
 
@@ -226,10 +229,10 @@ void OP_8XYE(chip8_cpu* cpu) {
 void OP_CXNN(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
     u8 mask = cpu->current_op_code & 0x00ff;
-    cpu->registers[VX] = ((rand() % 0xFF) & mask);
+    cpu->registers[VX] = ((rand() % 256) & mask);
 }
 void OP_1NNN(chip8_cpu* cpu) {
-    cpu->program_counter =( cpu->current_op_code & 0xFFF);
+    cpu->program_counter = ( cpu->current_op_code & 0xFFF);
 }
 void OP_BNNN(chip8_cpu* cpu) {
     u16 result = ((cpu->current_op_code & 0xFFF) + cpu->registers[0]);
@@ -246,7 +249,7 @@ void OP_2NNN(chip8_cpu* cpu) {
         exit(1);
     }
     // Remember address of next instruction: 
-    cpu->stack[cpu->s_pointer] = cpu->program_counter + 2;
+    cpu->stack[cpu->s_pointer] = cpu->program_counter;
     cpu->s_pointer++;
     // Set subroutine address start as current operation
     cpu->program_counter = ( cpu->current_op_code & 0xFFF); 
@@ -317,7 +320,7 @@ void OP_FX0A(chip8_cpu* cpu) {
 void OP_EX9E(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
     u8 value = cpu->registers[VX];
-    if (value > KEYBOARD_SIZE) {
+    if (value >= KEYBOARD_SIZE) {
         printf("No such key...\n");
         exit(1);
     }
@@ -337,7 +340,7 @@ void OP_EXA1(chip8_cpu* cpu) {
     }
 }
 void OP_ANNN(chip8_cpu* cpu) {
-    u8 num = cpu->current_op_code & 0x0fff;
+    u16 num = (cpu->current_op_code & 0x0fff);
     cpu->I_address_register = num;
 }
 void OP_FX1E(chip8_cpu* cpu) {
@@ -347,9 +350,9 @@ void OP_FX1E(chip8_cpu* cpu) {
 
 void drawSpriteRow(chip8_cpu* cpu, u8 x, u8 y, u8 data) {
     for (int i = 0; i < SPRITE_WIDTH; i++) {
-        u8 pixel = data & (0x80 >> i);
-        if (pixel == 1) {
-            if (cpu->display.screen[y][x + i] == 1) {
+        u8 pixel = data & (128 >> i);
+        if (pixel) {
+            if (cpu->display.screen[y][x + i]) {
                 cpu->registers[CARRY_BIT] = 1;
             }
             // This draw function draws the width of the passed row of bits, row stays the same
@@ -367,12 +370,13 @@ void OP_DXYN(chip8_cpu* cpu) {
     u16 VY = getVY(cpu->current_op_code);
     u8 height = cpu->current_op_code & 0x000f;
 
-    u16 x, y;
+    u8 x, y;
     x = cpu->registers[VX] % WIDTH;
     y = cpu->registers[VY] % HEIGHT;
     cpu->registers[CARRY_BIT] = 0;
+    //printf("Drawing at x=%d y=%d\tLocation: %d\n", x, y, cpu->I_address_register);
 
-    if (x >= WIDTH - SPRITE_WIDTH || y >= HEIGHT - height) {
+    if (y >= HEIGHT - height) {
         printf("Draw call outside of screen range. X = %d, Y = %d...\n", x, y);
         exit(1);
     }
@@ -384,11 +388,7 @@ void OP_DXYN(chip8_cpu* cpu) {
 }
 
 void OP_00E0(chip8_cpu* cpu) {
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            cpu->display.screen[y][x] = 0;
-        }
-    }
+    memset(cpu->display.screen, 0, sizeof(cpu->display.screen));
     cpu->drawFlag = 1;
 }
 void OP_FX29(chip8_cpu* cpu) {
@@ -406,14 +406,14 @@ void OP_FX33(chip8_cpu* cpu) {
 }
 void OP_FX55(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
-    for (int i = 0; i < VX; i++) {
+    for (int i = 0; i <= VX; i++) {
         cpu->memory[cpu->I_address_register + i] = cpu->registers[i];
     }
     cpu->I_address_register += VX + 1;
 } 
 void OP_FX65(chip8_cpu* cpu) {
     u16 VX = getVX(cpu->current_op_code);
-    for (int i = 0; i < VX; i++) {
+    for (int i = 0; i <= VX; i++) {
         cpu->registers[i] = cpu->memory[cpu->I_address_register + i];
     }
     cpu->I_address_register += VX + 1;
