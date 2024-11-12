@@ -3,11 +3,37 @@
 
 #define REFRESH_RATE 100
 
-int main(int argc, char* argv[]) {
-    (void) argc;
-    (void) argv;
+int str_contains(const char* str, int len, char c) {
+    for (int i = 0; i < len; i++) {
+        if (str[i] == c) return 1;
+    }
+    return 0;
+}
 
-    char romPath[] = "../games/test_opcode.ch8";
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        printf("Expected a single argument: the path to the rom.\n");
+        exit(1);
+    }
+
+    char rom_path[1024] = {0};
+
+    int rom_name_len = strlen(argv[1]);
+
+    if (str_contains(argv[1], rom_name_len, '/')) {
+        // run the game
+        strcpy(rom_path, argv[1]);
+        
+    }
+    else {
+        // append game name to the games folder:
+        strcat(rom_path, "../games/");
+        strcat(rom_path, argv[1]);
+        if (strcmp(argv[1] + rom_name_len - 4, ".ch8") != 0) {
+            strcat(rom_path, ".ch8");
+        }
+    }
+
 
     chip8_cpu chip8;
     // Engine refresh rate
@@ -17,7 +43,7 @@ int main(int argc, char* argv[]) {
     initInput(chip8.keypad);
     initialize(&chip8);
     // Loads the passed ROM to the Chip8 Memory
-    load_game(&chip8, romPath);
+    load_game(&chip8, rom_path);
 
     clock_t lastCycleTime = clock();
     bool quit = false;

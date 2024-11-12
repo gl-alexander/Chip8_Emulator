@@ -372,7 +372,7 @@ void OP_DXYN(chip8_cpu* cpu) {
     y = cpu->registers[VY] % HEIGHT;
     cpu->registers[CARRY_BIT] = 0;
 
-    if (y >= HEIGHT - height) {
+    if (y > HEIGHT - height) {
         printf("Draw call outside of screen range. X = %d, Y = %d...\n", x, y);
         exit(1);
     }

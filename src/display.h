@@ -13,8 +13,8 @@
 #define COL_BLACK 0, 0, 0
 #define COL_WHITE 255, 255, 255
 #define COL_ORANGE 255, 170, 0
-#define COL_BACKGROUND COL_WHITE
-#define COL_PIXEL COL_ORANGE
+#define COL_BACKGROUND COL_BLACK
+#define COL_PIXEL COL_WHITE
 
 // display state:
 typedef struct display {
