@@ -3,4 +3,3 @@ CMakeLists.txt*
 .vscode
 cmake/
 .cache/
-screenshots/
